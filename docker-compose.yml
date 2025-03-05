@@ -1,0 +1,35 @@
+services:
+  postgresql:
+    image: postgres:13
+    container_name: meu-banco
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mynetwork
+
+  app:
+    build:
+      context: .
+    depends_on:
+      - postgresql
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: ${DB_URL}
+    networks:
+      - mynetwork
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+volumes:
+  postgres_data:
+
+networks:
+  mynetwork:
+    driver: bridge
